@@ -1,14 +1,22 @@
-use rand::{seq::SliceRandom, thread_rng};
+use rand::{thread_rng, Rng};
 
 fn main() {
     let boobs = std::process::Command::new("fd").arg("-d").arg("1").arg("-t").arg("d").output().unwrap();
-    let mut to_shuf =
-        boobs.stdout.split(|b| b == &b'\n').map(|b| std::str::from_utf8(b).unwrap()).collect::<Vec<&str>>();
+
+    let mut dirs = boobs.stdout.split(|b| b == &b'\n').map(|b| std::str::from_utf8(b).unwrap()).collect::<Vec<&str>>();
+
+    if let Some(last) = dirs.last() {
+        if last.is_empty() {
+            dirs.pop();
+        }
+    }
+
+    if dirs.len().lt(&1) {
+        return println!("There needs to be at least one directory in target location.");
+    }
 
     let mut rng = thread_rng();
-    to_shuf.shuffle(&mut rng);
+    let i = rng.gen_range(0..dirs.len());
 
-    // We could just grab a random index, but where is the fun in that?
-    let shuf = std::process::Command::new("shuf").args(["-n", "1"]).arg("-e").args(to_shuf).output().unwrap();
-    println!("{}", std::str::from_utf8(&shuf.stdout).unwrap().trim_end());
+    println!("{}", dirs[i]);
 }
